@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">SolarGraph</string>
+
+    <!-- Strings related to login -->
+    <string name="prompt_email">Email</string>
+    <string name="prompt_password">Password (optional)</string>
+    <string name="action_sign_in">Sign in or register</string>
+    <string name="action_sign_in_short">Sign in</string>
+    <string name="error_invalid_email">This email address is invalid</string>
+    <string name="error_invalid_password">This password is too short</string>
+    <string name="error_incorrect_password">This password is incorrect</string>
+    <string name="error_field_required">This field is required</string>
+    <string name="permission_rationale">"Contacts permissions are needed for providing email
+        completions."
+    </string>
+    <string name="requesting_login_token">Requesting login token&#8230;</string>
+    <string name="logging_in">Logging in&#8230;</string>
+    <string name="retrieving_data">Retrieving data&#8230;</string>
+    <string name="got_data">Got some data</string>
+    <string name="no_connection">No network connection</string>
+    <string name="retry_logging_in">Problem logging in, trying again&#8230;</string>
+    <string name="max_retries_exceeded">Problem logging in, max retries exceeded</string>
+    <string name="no_credentials">No username or password set</string>
+</resources>

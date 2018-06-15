@@ -1,0 +1,16 @@
+@startuml
+
+[*] --> RetrieveSecrets
+RetrieveSecrets : Retrieve hidden token from auth page
+RetrieveSecrets : Store cookies
+
+RetrieveSecrets -> Login
+Login : Log in user cookies, token and user login data
+Login : Store cookies
+
+Login --> RetrieveLatestData
+RetrieveLatestData : Retrieve data using cookies
+RetrieveLatestData --> RetrieveSecrets : on session expiration
+RetrieveLatestData --> [*] : Got data
+
+@enduml
