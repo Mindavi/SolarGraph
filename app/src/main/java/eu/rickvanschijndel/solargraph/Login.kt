@@ -41,7 +41,7 @@ class Login(context: Context, client: OkHttpClient) {
     }
 
     private fun isAlreadyLoggedIn(): Boolean {
-        val url = HttpUrl.parse(BASE_URL) ?: throw IllegalArgumentException("BASE_URL")
+        val url = HttpUrl.parse(BASE_URL + LOGIN_ROUTE) ?: throw IllegalArgumentException("LOGIN_URL")
         val cookies = mHttpClient.get()?.cookieJar()?.loadForRequest(url)
         if (cookies?.find { it.name() == SESSION_COOKIE_NAME } != null) {
             return true

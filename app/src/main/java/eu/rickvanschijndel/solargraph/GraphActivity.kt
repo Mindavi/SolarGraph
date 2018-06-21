@@ -33,6 +33,13 @@ class GraphActivity : AppCompatActivity(), LoginCallback {
         private const val maxRetries = 3
     }
 
+    private fun loadUsernameAndPassword() {
+        val username = PreferenceManager.getDefaultSharedPreferences(this).getString(LoginActivity.USERNAME_PREFERENCE_NAME, "")
+        val password = PreferenceManager.getDefaultSharedPreferences(this).getString(LoginActivity.PASSWORD_PREFERENCE_NAME, "")
+        login.setUsername(username)
+        login.setPassword(password)
+    }
+
     override fun onUpdate(event: LoginCallback.LoginEvent, updateMessage: String?) {
         when(event) {
             LoginCallback.LoginEvent.STATUS_CHANGED -> {
@@ -131,7 +138,7 @@ class GraphActivity : AppCompatActivity(), LoginCallback {
         }
     }
 
-    private fun getActiveNetworkInfo(): NetworkInfo {
+    private fun getActiveNetworkInfo(): NetworkInfo? {
         val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         return connectivityManager.activeNetworkInfo
     }
@@ -147,13 +154,12 @@ class GraphActivity : AppCompatActivity(), LoginCallback {
         login = Login(this, client)
 
         val networkInfo = getActiveNetworkInfo()
-        if (!networkInfo.isConnected)
-        {
-            network_info.setText(R.string.no_connection)
-            return
+        if (networkInfo?.isConnected == true) {
+            loadUsernameAndPassword()
+            login.login()
         }
-        login.setUsername("username")
-        login.setPassword("password")
-        login.login()
+        else {
+            network_info.setText(R.string.no_connection)
+        }
     }
 }

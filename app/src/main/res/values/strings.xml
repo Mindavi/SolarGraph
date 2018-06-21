@@ -21,4 +21,7 @@
     <string name="retry_logging_in">Problem logging in, trying again&#8230;</string>
     <string name="max_retries_exceeded">Problem logging in, max retries exceeded</string>
     <string name="no_credentials">No username or password set</string>
+    <string name="email_address">Email address</string>
+    <string name="password">Password</string>
+    <string name="log_in">Log in</string>
 </resources>
