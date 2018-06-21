@@ -162,7 +162,8 @@ class GraphActivity : AppCompatActivity(), LoginCallback {
                 Toast.makeText(this@GraphActivity, "Power: ${e?.y}W at ${timeFormatter.format(e?.x)}", Toast.LENGTH_SHORT).show()
             }
         })
-        graph.isScaleXEnabled = true
+//        graph.isScaleXEnabled = true
+        graph.isScaleYEnabled = true
         graph.description.isEnabled = false
 
         runOnUiThread {
