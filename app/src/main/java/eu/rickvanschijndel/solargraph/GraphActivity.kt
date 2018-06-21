@@ -1,6 +1,7 @@
 package eu.rickvanschijndel.solargraph
 
 import android.content.Context
+import android.graphics.Color
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.support.v7.app.AppCompatActivity
@@ -11,9 +12,11 @@ import android.widget.Toast
 import com.franmontiel.persistentcookiejar.PersistentCookieJar
 import com.franmontiel.persistentcookiejar.cache.SetCookieCache
 import com.franmontiel.persistentcookiejar.persistence.SharedPrefsCookiePersistor
-import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter
-import com.jjoe64.graphview.series.LineGraphSeries
-import com.jjoe64.graphview.series.DataPoint
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.highlight.Highlight
+import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import kotlinx.android.synthetic.main.activity_graph.*
 import okhttp3.*
 import org.json.JSONObject
@@ -110,31 +113,49 @@ class GraphActivity : AppCompatActivity(), LoginCallback {
     private fun onDataRetrieved(responseData: String) {
         val jsonObject = JSONObject(responseData).getJSONObject("stats").getJSONObject("graphs").getJSONObject("realtime_power")
         val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
-        var dataPoints = arrayOf<DataPoint>()
+        var dataPoints = arrayOf<Entry>()
         for (key in jsonObject.keys()) {
             val power = jsonObject.getDouble(key)
             val date = formatter.parse(key)
-            dataPoints += DataPoint(date, power)
+            // we lose some precision by converting to float unfortunately
+            dataPoints += Entry(date.time.toFloat(), power.toFloat())
         }
 
         val sortedDataPoints = dataPoints.sortedWith(compareBy({it.x}))
 
-        val series = LineGraphSeries(sortedDataPoints.toTypedArray())
+
+        val series = LineDataSet(sortedDataPoints, "Power")
+        series.color = Color.GREEN
+        series.lineWidth = 5.0f
+        val data = LineData(series)
+        data.setDrawValues(false)
+        graph.data = data
+        val timeFormatter = SimpleDateFormat("HH:mm", Locale.US)
+        graph.xAxis.setValueFormatter { value, _ ->
+            timeFormatter.format(value)
+        }
+        val firstPower = sortedDataPoints.first { it.y > 0}
+        val lastPower = sortedDataPoints.last{ it.y > 0}
+        graph.xAxis.axisMinimum = firstPower.x
+        graph.xAxis.axisMaximum = lastPower.x
+        graph.legend.isEnabled = false
+        graph.setOnChartValueSelectedListener(object: OnChartValueSelectedListener{
+            override fun onNothingSelected() {
+                // pass
+            }
+
+            override fun onValueSelected(e: Entry?, h: Highlight?) {
+                Toast.makeText(this@GraphActivity, "Power: ${e?.y}W at ${timeFormatter.format(e?.x)}", Toast.LENGTH_SHORT).show()
+            }
+        })
+        graph.isScaleXEnabled = true
+        graph.description.isEnabled = false
+
         runOnUiThread {
             network_info.setText(R.string.got_data)
-            graph.addSeries(series)
-            val timeFormatter = SimpleDateFormat("HH:00", Locale.US)
-            graph.gridLabelRenderer.labelFormatter = DateAsXAxisLabelFormatter(this, timeFormatter)
-            val firstPower = sortedDataPoints.first { it.y > 0}
-            val lastPower = sortedDataPoints.last{ it.y > 0}
-            graph.viewport.setMinX(firstPower.x)
-            graph.viewport.setMaxX(lastPower.x)
-            graph.viewport.isXAxisBoundsManual = true
-            graph.viewport.setMaxY(series.highestValueY)
-            graph.viewport.isYAxisBoundsManual = true
-            series.setOnDataPointTapListener { _, dataPoint ->
-                Toast.makeText(this, "Power: ${dataPoint.y}W", Toast.LENGTH_SHORT).show()
-            }
+
+            // redraw
+            graph.invalidate()
         }
     }
 
@@ -146,6 +167,8 @@ class GraphActivity : AppCompatActivity(), LoginCallback {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_graph)
+
+        graph.setNoDataText("Waiting for data...")
 
         cookieJar = PersistentCookieJar(SetCookieCache(), SharedPrefsCookiePersistor(this))
         client = OkHttpClient.Builder()
