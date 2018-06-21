@@ -24,4 +24,10 @@
     <string name="email_address">Email address</string>
     <string name="password">Password</string>
     <string name="log_in">Log in</string>
+    <string name="total_power">Cumulative power\n%1$dkWh</string>
+    <string name="today_power">Power today\n%1$dkWh</string>
+    <string name="month_power">Power this month\n%1$dkWh</string>
+    <string name="total_power_default">Total power</string>
+    <string name="power_this_month_default">Power this month</string>
+    <string name="power_today_default">Power today</string>
 </resources>

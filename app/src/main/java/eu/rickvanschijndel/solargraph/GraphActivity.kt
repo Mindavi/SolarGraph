@@ -82,7 +82,7 @@ class GraphActivity : AppCompatActivity(), LoginCallback {
             network_info.setText(R.string.retrieving_data)
         }
         val request = Request.Builder()
-                .url("https://my.autarco.com/api/site/or0q8h99/inverter/current?i=410017621936")
+                .url("https://my.autarco.com/api/site/or0q8h99")
                 .build()
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call?, e: IOException?) {
@@ -111,12 +111,24 @@ class GraphActivity : AppCompatActivity(), LoginCallback {
 
 
     private fun onDataRetrieved(responseData: String) {
-        val jsonObject = JSONObject(responseData).getJSONObject("stats").getJSONObject("graphs").getJSONObject("realtime_power")
-        val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
+        val statsObject = JSONObject(responseData).getJSONObject("stats")
+        val kpiObject = statsObject.getJSONObject("kpis")
+//        val currentProduction = kpiObject.getLong("current_production")
+        val outputToday = kpiObject.getLong("output_today")
+        val outputMonth = kpiObject.getInt("output_month")
+        val outputTotal = kpiObject.getInt("output_to_date")
+        runOnUiThread {
+            today_power.text = getString(R.string.today_power, outputToday)
+            monthly_power.text = getString(R.string.month_power, outputMonth)
+            total_power.text = getString(R.string.total_power, outputTotal)
+        }
+
+        val realTimePowerObject = statsObject.getJSONObject("graphs").getJSONObject("realtime_power")
+        val dateFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
         var dataPoints = arrayOf<Entry>()
-        for (key in jsonObject.keys()) {
-            val power = jsonObject.getDouble(key)
-            val date = formatter.parse(key)
+        for (key in realTimePowerObject.keys()) {
+            val power = realTimePowerObject.getDouble(key)
+            val date = dateFormatter.parse(key)
             // we lose some precision by converting to float unfortunately
             dataPoints += Entry(date.time.toFloat(), power.toFloat())
         }
@@ -130,6 +142,8 @@ class GraphActivity : AppCompatActivity(), LoginCallback {
         val data = LineData(series)
         data.setDrawValues(false)
         graph.data = data
+        // would be cool if this formatter could round to 15 mins, as the data is like that
+        // already and we lose some precision by using floats as data type (MPAndroidChart requires this)
         val timeFormatter = SimpleDateFormat("HH:mm", Locale.US)
         graph.xAxis.setValueFormatter { value, _ ->
             timeFormatter.format(value)
