@@ -2,7 +2,7 @@ package eu.rickvanschijndel.solargraph
 
 import android.content.Context
 import android.util.Log
-import com.franmontiel.persistentcookiejar.ClearableCookieJar
+import com.franmontiel.persistentcookiejar.PersistentCookieJar
 import okhttp3.*
 import org.jsoup.Jsoup
 import java.io.IOException
@@ -41,7 +41,7 @@ class Login(context: Context, client: OkHttpClient) {
     }
 
     private fun isAlreadyLoggedIn(): Boolean {
-        val url = HttpUrl.parse(BASE_URL + LOGIN_ROUTE) ?: throw IllegalArgumentException("LOGIN_URL")
+        val url = HttpUrl.parse(BASE_URL) ?: throw IllegalArgumentException("BASE_URL")
         val cookies = mHttpClient.get()?.cookieJar()?.loadForRequest(url)
         if (cookies?.find { it.name() == SESSION_COOKIE_NAME } != null) {
             return true
@@ -120,7 +120,7 @@ class Login(context: Context, client: OkHttpClient) {
             override fun onResponse(call: Call?, response: Response?) {
                 if (response == null || !response.isSuccessful) {
                     Log.d(TAG, "Invalid response")
-                    val cookieJar = mHttpClient.get()?.cookieJar() as ClearableCookieJar
+                    val cookieJar = mHttpClient.get()?.cookieJar() as PersistentCookieJar
                     cookieJar.clear()
                     update(LoginCallback.LoginEvent.LOGIN_FAILURE, response?.message())
                     return
@@ -132,10 +132,9 @@ class Login(context: Context, client: OkHttpClient) {
 
     fun setUsername(username: String) {
         if (username.isBlank()) return
-        val cookieJar: ClearableCookieJar = mHttpClient.get()?.cookieJar() as ClearableCookieJar
-        cookieJar.clear()
         mUsername = username
     }
+
     fun setPassword(password: String) {
         if (password.isBlank()) return
         mPassword = password
