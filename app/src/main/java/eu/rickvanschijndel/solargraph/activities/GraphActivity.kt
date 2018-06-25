@@ -31,7 +31,6 @@ import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_graph.*
 import okhttp3.*
 import retrofit2.Response
-import java.lang.Float
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -128,7 +127,6 @@ class GraphActivity : AppCompatActivity(), LoginCallback {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(object: SingleObserver<Response<ProductionResponse>> {
                     override fun onSuccess(response: Response<ProductionResponse>) {
-                        Log.d(TAG, "Got response")
                         when(response.code()) {
                             RESPONSE_OK -> {
                                 val body = response.body()!!
@@ -227,9 +225,15 @@ class GraphActivity : AppCompatActivity(), LoginCallback {
         graph.description.isEnabled = false
 
         graph.xAxis.setValueFormatter { value, _ ->
-            // TODO: round to nearest 15 minutes
-//            val d = Date(Float.valueOf(value).toLong())
-//            Log.d(TAG, (d.minutes % 15).toString())
+            // round to nearest 15 minutes
+            // this might not work correctly when the values
+            // get more precision (more often than every 15 minutes)
+            // but it does work for now
+            // it'll probably fail in the higher values when that day comes
+            val roundedDate = Date(value.toLong())
+            roundedDate.minutes = (roundedDate.minutes + 8) / 15 * 15
+            roundedDate.seconds = 0
+            Log.d(TAG, roundedDate.minutes.toString() + " " + roundedDate)
             timeFormatter.format(value)
         }
     }
