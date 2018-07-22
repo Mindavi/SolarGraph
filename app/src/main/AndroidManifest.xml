@@ -14,7 +14,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
-        <activity android:name=".RedirectActivity"
+        <activity android:name=".activities.RedirectActivity"
             android:theme="@android:style/Theme.Translucent.NoTitleBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -22,8 +22,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".LoginActivity" />
-        <activity android:name=".GraphActivity" />
+        <activity android:name=".activities.LoginActivity"
+            android:windowSoftInputMode="adjustResize"
+            />
+        <activity android:name=".activities.GraphActivity" />
     </application>
 
 </manifest>

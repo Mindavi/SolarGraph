@@ -1,9 +1,10 @@
-package eu.rickvanschijndel.solargraph
+package eu.rickvanschijndel.solargraph.activities
 
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.preference.PreferenceManager
+import eu.rickvanschijndel.solargraph.R
 
 class RedirectActivity : Activity() {
 

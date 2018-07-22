@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".GraphActivity"
+    tools:context=".activities.GraphActivity"
     android:orientation="horizontal">
 
     <TextView
@@ -14,8 +14,70 @@
 
     <com.github.mikephil.charting.charts.LineChart
         android:id="@+id/graph"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_below="@+id/network_info" />
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@id/horizontal_guideline"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/network_info" />
 
-</RelativeLayout>
+    <android.support.constraint.Guideline
+        android:id="@+id/horizontal_guideline"
+        android:layout_width="1dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.8" />
+
+    <TextView
+        android:id="@+id/total_power"
+        android:text="@string/total_power_default"
+        android:gravity="center"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/horizontal_guideline"
+        app:layout_constraintBottom_toBottomOf="@id/graph_snack_layout"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/grid_guideline_one_third" />
+
+    <android.support.constraint.Guideline
+        android:id="@+id/grid_guideline_one_third"
+        android:layout_width="1dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.33" />
+
+    <TextView
+        android:id="@+id/monthly_power"
+        android:text="@string/power_this_month_default"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/horizontal_guideline"
+        app:layout_constraintEnd_toStartOf="@id/grid_guideline_two_thirds"
+        android:gravity="center"
+        app:layout_constraintStart_toEndOf="@id/grid_guideline_one_third"
+        app:layout_constraintBottom_toBottomOf="@id/graph_snack_layout" />
+
+    <android.support.constraint.Guideline
+        android:id="@+id/grid_guideline_two_thirds"
+        android:layout_width="1dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.67" />
+
+    <TextView
+        android:id="@+id/today_power"
+        android:text="@string/power_today_default"
+        app:layout_constraintTop_toBottomOf="@id/horizontal_guideline"
+        app:layout_constraintStart_toEndOf="@id/grid_guideline_two_thirds"
+        android:gravity="center"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/graph_snack_layout"
+        android:layout_width="0dp"
+        android:layout_height="0dp" />
+
+    <android.support.design.widget.CoordinatorLayout
+        android:id="@+id/graph_snack_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+</android.support.constraint.ConstraintLayout>
