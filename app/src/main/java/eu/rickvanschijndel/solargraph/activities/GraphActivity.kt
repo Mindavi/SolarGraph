@@ -59,7 +59,7 @@ class GraphActivity : AppCompatActivity(), LoginCallback {
 
         cookieJar = PersistentCookieJar(SetCookieCache(), SharedPrefsCookiePersistor(this))
         client = OkHttpClient.Builder()
-                .connectTimeout(MAX_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+                .readTimeout(MAX_TIMEOUT_SECONDS, TimeUnit.SECONDS)
                 .cookieJar(cookieJar)
                 .build()
         login = Login(this, client)
@@ -152,6 +152,7 @@ class GraphActivity : AppCompatActivity(), LoginCallback {
 
                     override fun onError(e: Throwable) {
                         Log.d(TAG, e.toString())
+                        network_info.text = e.toString()
                     }
                 })
     }
