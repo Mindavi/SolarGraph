@@ -35,7 +35,7 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintTop_toBottomOf="@id/horizontal_guideline"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/graph_snack_layout"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/grid_guideline_one_third" />
 
@@ -55,7 +55,7 @@
         app:layout_constraintEnd_toStartOf="@id/grid_guideline_two_thirds"
         android:gravity="center"
         app:layout_constraintStart_toEndOf="@id/grid_guideline_one_third"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintBottom_toBottomOf="@id/graph_snack_layout" />
 
     <android.support.constraint.Guideline
         android:id="@+id/grid_guideline_two_thirds"
@@ -71,7 +71,13 @@
         app:layout_constraintStart_toEndOf="@id/grid_guideline_two_thirds"
         android:gravity="center"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/graph_snack_layout"
         android:layout_width="0dp"
         android:layout_height="0dp" />
+
+    <android.support.design.widget.CoordinatorLayout
+        android:id="@+id/graph_snack_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"/>
 </android.support.constraint.ConstraintLayout>

@@ -7,8 +7,8 @@ import android.net.NetworkInfo
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.preference.PreferenceManager
+import android.support.design.widget.Snackbar
 import android.util.Log
-import android.widget.Toast
 import com.franmontiel.persistentcookiejar.PersistentCookieJar
 import com.franmontiel.persistentcookiejar.cache.SetCookieCache
 import com.franmontiel.persistentcookiejar.persistence.SharedPrefsCookiePersistor
@@ -221,7 +221,7 @@ class GraphActivity : AppCompatActivity(), LoginCallback {
             }
 
             override fun onValueSelected(e: Entry?, h: Highlight?) {
-                Toast.makeText(this@GraphActivity, "Power: ${e?.y}W at ${timeFormatter.format(e?.x)}", Toast.LENGTH_SHORT).show()
+                Snackbar.make(graph_snack_layout, "Power: ${e?.y}W at ${timeFormatter.format(e?.x)}", Snackbar.LENGTH_SHORT).show()
             }
         })
         graph.isScaleXEnabled = true
