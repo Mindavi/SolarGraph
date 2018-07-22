@@ -29,10 +29,12 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_graph.*
-import okhttp3.*
+import okhttp3.OkHttpClient
 import retrofit2.Response
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Locale
+import java.util.Date
+import java.util.concurrent.TimeUnit
 
 class GraphActivity : AppCompatActivity(), LoginCallback {
     private lateinit var client: OkHttpClient
@@ -44,6 +46,7 @@ class GraphActivity : AppCompatActivity(), LoginCallback {
     companion object {
         private const val TAG = "GraphActivity"
         private const val MAX_RETRIES = 3
+        private const val MAX_TIMEOUT_SECONDS = 20L
         private const val RESPONSE_OK = 200
         private const val RESPONSE_UNAUTHORIZED = 401
     }
@@ -56,6 +59,7 @@ class GraphActivity : AppCompatActivity(), LoginCallback {
 
         cookieJar = PersistentCookieJar(SetCookieCache(), SharedPrefsCookiePersistor(this))
         client = OkHttpClient.Builder()
+                .connectTimeout(MAX_TIMEOUT_SECONDS, TimeUnit.SECONDS)
                 .cookieJar(cookieJar)
                 .build()
         login = Login(this, client)
