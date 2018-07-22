@@ -30,4 +30,7 @@
     <string name="total_power_default">Total power</string>
     <string name="power_this_month_default">Power this month</string>
     <string name="power_today_default">Power today</string>
+    <string name="login_screen_title">MyAutarco</string>
+    <string name="incomplete_credentials">Fill in a username and password</string>
+    <string name="login_failure">Could not log in</string>
 </resources>

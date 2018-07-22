@@ -4,7 +4,7 @@ import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.preference.PreferenceManager
-import android.widget.Toast
+import android.support.design.widget.Snackbar
 import com.franmontiel.persistentcookiejar.PersistentCookieJar
 import com.franmontiel.persistentcookiejar.cache.SetCookieCache
 import com.franmontiel.persistentcookiejar.persistence.SharedPrefsCookiePersistor
@@ -26,8 +26,8 @@ class LoginActivity : AppCompatActivity(), LoginCallback {
 
     private fun saveUsernameAndPassword() {
         val editor = PreferenceManager.getDefaultSharedPreferences(this).edit()
-        editor.putString(USERNAME_PREFERENCE_NAME, email_address.text.toString())
-        editor.putString(PASSWORD_PREFERENCE_NAME, password.text.toString())
+        editor.putString(USERNAME_PREFERENCE_NAME, email_address.editText?.text.toString())
+        editor.putString(PASSWORD_PREFERENCE_NAME, password.editText?.text.toString())
         editor.apply()
     }
 
@@ -42,7 +42,9 @@ class LoginActivity : AppCompatActivity(), LoginCallback {
                 finish()
             }
             LoginCallback.LoginEvent.LOGIN_FAILURE -> {
-                Toast.makeText(this, "Could not log in", Toast.LENGTH_SHORT).show()
+                runOnUiThread {
+                    Snackbar.make(snack_layout, R.string.login_failure, Snackbar.LENGTH_LONG).show()
+                }
             }
             LoginCallback.LoginEvent.NO_CREDENTIALS -> {
 
@@ -60,12 +62,12 @@ class LoginActivity : AppCompatActivity(), LoginCallback {
         login = Login(this, client)
 
         login_button.setOnClickListener { _ ->
-            if (email_address.text.isNullOrBlank() || password.text.isNullOrBlank()) {
-                Toast.makeText(this, "Fill in a username or password", Toast.LENGTH_LONG).show()
+            if (email_address.editText?.text.toString().isBlank() || password.editText?.text.toString().isBlank()) {
+                Snackbar.make(snack_layout, R.string.incomplete_credentials, Snackbar.LENGTH_LONG).show()
                 return@setOnClickListener
             }
-            login.setUsername(email_address.text.toString())
-            login.setPassword(password.text.toString())
+            login.setUsername(email_address.editText?.text.toString())
+            login.setPassword(password.editText?.text.toString())
             saveUsernameAndPassword()
             login.login()
         }
