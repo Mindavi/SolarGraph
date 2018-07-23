@@ -16,6 +16,7 @@ import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import eu.rickvanschijndel.solargraph.R
+import eu.rickvanschijndel.solargraph.ResponseCode
 import eu.rickvanschijndel.solargraph.models.ProductionResponse
 import eu.rickvanschijndel.solargraph.rest.ApiImpl
 import io.reactivex.Single
@@ -27,7 +28,6 @@ import retrofit2.Response
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.Date
-
 import kotlinx.android.synthetic.main.activity_graph.network_info
 import kotlinx.android.synthetic.main.activity_graph.today_power
 import kotlinx.android.synthetic.main.activity_graph.monthly_power
@@ -40,8 +40,6 @@ class GraphActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "GraphActivity"
-        private const val RESPONSE_OK = 200
-        private const val RESPONSE_UNAUTHORIZED = 401
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -98,11 +96,11 @@ class GraphActivity : AppCompatActivity() {
                 ?.subscribe(object: SingleObserver<Response<ProductionResponse>> {
                     override fun onSuccess(response: Response<ProductionResponse>) {
                         when(response.code()) {
-                            RESPONSE_OK -> {
+                            ResponseCode.OK -> {
                                 val body = response.body()!!
                                 onDataRetrieved(body)
                             }
-                            RESPONSE_UNAUTHORIZED -> {
+                            ResponseCode.UNAUTHORIZED -> {
                                 removeUsernameAndPassword()
                                 restartApplication()
                             }

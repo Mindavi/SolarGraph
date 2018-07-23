@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.preference.PreferenceManager
 import android.support.design.widget.Snackbar
 import eu.rickvanschijndel.solargraph.R
+import eu.rickvanschijndel.solargraph.ResponseCode
 import eu.rickvanschijndel.solargraph.models.SiteResponse
 import eu.rickvanschijndel.solargraph.rest.ApiImpl
 import io.reactivex.SingleObserver
@@ -69,14 +70,14 @@ class LoginActivity : AppCompatActivity() {
                     .subscribe(object: SingleObserver<Response<Collection<SiteResponse>>> {
                         override fun onSuccess(response: Response<Collection<SiteResponse>>) {
                             when(response.code()) {
-                                200 -> {
+                                ResponseCode.OK -> {
                                     saveUsernameAndPassword()
                                     val graphActivity = Intent(applicationContext, GraphActivity::class.java)
                                     startActivity(graphActivity)
                                     finish()
                                 }
 
-                                401 -> {
+                                ResponseCode.UNAUTHORIZED -> {
                                     notifyLoginFailure(response.message())
                                     return
                                 }
