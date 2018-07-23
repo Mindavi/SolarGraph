@@ -10,6 +10,8 @@ import android.os.Bundle
 import android.preference.PreferenceManager
 import android.support.design.widget.Snackbar
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
@@ -40,6 +42,23 @@ class GraphActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "GraphActivity"
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        val inflater = menuInflater
+        inflater.inflate(R.menu.graph_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        when (item?.itemId) {
+            R.id.logout_button -> {
+                removeUsernameAndPassword()
+                restartApplication()
+                return true
+            }
+        }
+        return false
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

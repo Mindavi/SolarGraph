@@ -21,4 +21,5 @@
     <string name="login_screen_title">MyAutarco</string>
     <string name="incomplete_credentials">Fill in a username and password</string>
     <string name="login_failure">Could not log in: %1$s</string>
+    <string name="log_out">Log out</string>
 </resources>
