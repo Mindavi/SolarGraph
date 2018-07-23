@@ -15,11 +15,11 @@ class RedirectActivity : Activity() {
         val username = PreferenceManager.getDefaultSharedPreferences(applicationContext).getString("username", "")
         val password = PreferenceManager.getDefaultSharedPreferences(applicationContext).getString("password", "")
         if (username.isEmpty() || password.isEmpty()) {
-            val loginActivity = Intent(this, LoginActivity::class.java)
+            val loginActivity = Intent(applicationContext, LoginActivity::class.java)
             startActivity(loginActivity)
         }
         else {
-            val graphActivity = Intent(this, GraphActivity::class.java)
+            val graphActivity = Intent(applicationContext, GraphActivity::class.java)
             startActivity(graphActivity)
         }
         finish()

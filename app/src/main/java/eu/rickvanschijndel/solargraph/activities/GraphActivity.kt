@@ -1,6 +1,7 @@
 package eu.rickvanschijndel.solargraph.activities
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
@@ -9,46 +10,36 @@ import android.os.Bundle
 import android.preference.PreferenceManager
 import android.support.design.widget.Snackbar
 import android.util.Log
-import com.franmontiel.persistentcookiejar.PersistentCookieJar
-import com.franmontiel.persistentcookiejar.cache.SetCookieCache
-import com.franmontiel.persistentcookiejar.persistence.SharedPrefsCookiePersistor
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
-import eu.rickvanschijndel.solargraph.Login
-import eu.rickvanschijndel.solargraph.LoginCallback
 import eu.rickvanschijndel.solargraph.R
+import eu.rickvanschijndel.solargraph.ResponseCode
 import eu.rickvanschijndel.solargraph.models.ProductionResponse
-import eu.rickvanschijndel.solargraph.rest.ApiClient
-import eu.rickvanschijndel.solargraph.rest.ApiInterface
+import eu.rickvanschijndel.solargraph.rest.ApiImpl
 import io.reactivex.Single
 import io.reactivex.SingleObserver
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
-import kotlinx.android.synthetic.main.activity_graph.*
-import okhttp3.OkHttpClient
 import retrofit2.Response
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.Date
-import java.util.concurrent.TimeUnit
+import kotlinx.android.synthetic.main.activity_graph.network_info
+import kotlinx.android.synthetic.main.activity_graph.today_power
+import kotlinx.android.synthetic.main.activity_graph.monthly_power
+import kotlinx.android.synthetic.main.activity_graph.total_power
+import kotlinx.android.synthetic.main.activity_graph.graph
+import kotlinx.android.synthetic.main.activity_graph.graph_snack_layout
 
-class GraphActivity : AppCompatActivity(), LoginCallback {
-    private lateinit var client: OkHttpClient
-    private lateinit var apiClient: ApiInterface
-    private lateinit var cookieJar: PersistentCookieJar
-    private lateinit var login: Login
-    private var retries = 0
+class GraphActivity : AppCompatActivity() {
+    private var apiImpl: ApiImpl? = null
 
     companion object {
         private const val TAG = "GraphActivity"
-        private const val MAX_RETRIES = 3
-        private const val MAX_TIMEOUT_SECONDS = 20L
-        private const val RESPONSE_OK = 200
-        private const val RESPONSE_UNAUTHORIZED = 401
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,18 +48,10 @@ class GraphActivity : AppCompatActivity(), LoginCallback {
 
         setupGraph()
 
-        cookieJar = PersistentCookieJar(SetCookieCache(), SharedPrefsCookiePersistor(this))
-        client = OkHttpClient.Builder()
-                .readTimeout(MAX_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-                .cookieJar(cookieJar)
-                .build()
-        login = Login(this, client)
-        apiClient = ApiClient(client).client.create(ApiInterface::class.java)
-
         val networkInfo = getActiveNetworkInfo()
         if (networkInfo?.isConnected == true) {
             loadUsernameAndPassword()
-            login.login()
+            retrieveData()
         }
         else {
             network_info.setText(R.string.no_connection)
@@ -76,49 +59,30 @@ class GraphActivity : AppCompatActivity(), LoginCallback {
     }
 
     private fun loadUsernameAndPassword() {
-        val username = PreferenceManager.getDefaultSharedPreferences(this).getString(LoginActivity.USERNAME_PREFERENCE_NAME, "")
-        val password = PreferenceManager.getDefaultSharedPreferences(this).getString(LoginActivity.PASSWORD_PREFERENCE_NAME, "")
-        login.setUsername(username)
-        login.setPassword(password)
+        val username = PreferenceManager.getDefaultSharedPreferences(applicationContext).getString(LoginActivity.USERNAME_PREFERENCE_NAME, "")
+        val password = PreferenceManager.getDefaultSharedPreferences(applicationContext).getString(LoginActivity.PASSWORD_PREFERENCE_NAME, "")
+        apiImpl = ApiImpl(username, password)
     }
 
-    override fun onUpdate(event: LoginCallback.LoginEvent, updateMessage: String?) {
-        when(event) {
-            LoginCallback.LoginEvent.STATUS_CHANGED -> {
-                runOnUiThread {
-                    if (updateMessage != null) {
-                        network_info.text = updateMessage
-                    }
-                }
-            }
-            LoginCallback.LoginEvent.LOGGED_IN -> {
-                retrieveData()
-                retries = 0
-            }
-            LoginCallback.LoginEvent.NO_CREDENTIALS -> {
-                runOnUiThread {
-                    network_info.setText(R.string.no_credentials)
-                }
-            }
-            LoginCallback.LoginEvent.LOGIN_FAILURE -> {
-                runOnUiThread {
-                    network_info.setText(R.string.retry_logging_in)
-                    retries++
-                    if (retries <= MAX_RETRIES) {
-                        login.login()
-                        return@runOnUiThread
-                    }
-                    else {
-                        network_info.setText(R.string.max_retries_exceeded)
-                    }
-                }
-            }
+    private fun removeUsernameAndPassword() {
+        val editor = PreferenceManager.getDefaultSharedPreferences(applicationContext).edit()
+        editor.remove(LoginActivity.USERNAME_PREFERENCE_NAME)
+        editor.remove(LoginActivity.PASSWORD_PREFERENCE_NAME)
+        editor.apply()
+    }
+
+    private fun restartApplication() {
+        val startActivity = Intent(applicationContext, RedirectActivity::class.java)
+        startActivity(startActivity)
+        finish()
+    }
+
+    private fun getProductionData(): Single<Response<ProductionResponse>>? {
+        if (apiImpl == null || apiImpl?.client == null) {
+            return null
         }
-    }
-
-    private fun getProductionData(): Single<Response<ProductionResponse>> {
-        return apiClient.getAvailableSites().flatMap({
-            return@flatMap apiClient.getProductionData(it.body()!!.toTypedArray()[0].publicKey!!)
+        return apiImpl?.client?.getAvailableSites()?.flatMap({
+            return@flatMap apiImpl?.client?.getProductionData(it.body()!!.toTypedArray()[0].publicKey!!)
         })
     }
 
@@ -127,18 +91,18 @@ class GraphActivity : AppCompatActivity(), LoginCallback {
             network_info.setText(R.string.retrieving_data)
         }
         getProductionData()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(object: SingleObserver<Response<ProductionResponse>> {
+                ?.subscribeOn(Schedulers.io())
+                ?.observeOn(AndroidSchedulers.mainThread())
+                ?.subscribe(object: SingleObserver<Response<ProductionResponse>> {
                     override fun onSuccess(response: Response<ProductionResponse>) {
                         when(response.code()) {
-                            RESPONSE_OK -> {
+                            ResponseCode.OK -> {
                                 val body = response.body()!!
                                 onDataRetrieved(body)
                             }
-                            RESPONSE_UNAUTHORIZED -> {
-                                cookieJar.clear()
-                                login.login()
+                            ResponseCode.UNAUTHORIZED -> {
+                                removeUsernameAndPassword()
+                                restartApplication()
                             }
                             else -> {
                                 network_info.text = response.message()
@@ -165,7 +129,6 @@ class GraphActivity : AppCompatActivity(), LoginCallback {
         today_power.text = getString(R.string.today_power, outputToday)
         monthly_power.text = getString(R.string.month_power, outputMonth)
         total_power.text = getString(R.string.total_power, outputTotal)
-
 
         val realTimePowerMap = responseData.stats?.graphs?.realTimePower
         val dateFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
@@ -202,7 +165,6 @@ class GraphActivity : AppCompatActivity(), LoginCallback {
 
         // redraw
         graph.invalidate()
-
     }
 
     private fun getActiveNetworkInfo(): NetworkInfo? {
@@ -238,7 +200,6 @@ class GraphActivity : AppCompatActivity(), LoginCallback {
             val roundedDate = Date(value.toLong())
             roundedDate.minutes = (roundedDate.minutes + 8) / 15 * 15
             roundedDate.seconds = 0
-            Log.d(TAG, roundedDate.minutes.toString() + " " + roundedDate)
             timeFormatter.format(value)
         }
     }
