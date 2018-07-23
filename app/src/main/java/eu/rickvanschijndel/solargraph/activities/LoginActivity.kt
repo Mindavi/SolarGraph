@@ -1,27 +1,35 @@
 package eu.rickvanschijndel.solargraph.activities
 
+import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkInfo
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.support.design.widget.Snackbar
-import com.franmontiel.persistentcookiejar.PersistentCookieJar
-import com.franmontiel.persistentcookiejar.cache.SetCookieCache
-import com.franmontiel.persistentcookiejar.persistence.SharedPrefsCookiePersistor
-import eu.rickvanschijndel.solargraph.Login
-import eu.rickvanschijndel.solargraph.LoginCallback
 import eu.rickvanschijndel.solargraph.R
-import kotlinx.android.synthetic.main.activity_login.*
-import okhttp3.OkHttpClient
+import eu.rickvanschijndel.solargraph.models.SiteResponse
+import eu.rickvanschijndel.solargraph.rest.ApiImpl
+import io.reactivex.SingleObserver
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.Disposable
+import io.reactivex.schedulers.Schedulers
+import retrofit2.Response
+import kotlinx.android.synthetic.main.activity_login.email_address
+import kotlinx.android.synthetic.main.activity_login.password
+import kotlinx.android.synthetic.main.activity_login.snack_layout
+import kotlinx.android.synthetic.main.activity_login.login_button
 
-class LoginActivity : AppCompatActivity(), LoginCallback {
-    private lateinit var cookieJar: PersistentCookieJar
-    private lateinit var client: OkHttpClient
-    private lateinit var login: Login
-
+class LoginActivity : AppCompatActivity() {
     companion object {
         const val USERNAME_PREFERENCE_NAME = "username"
         const val PASSWORD_PREFERENCE_NAME = "password"
+    }
+
+    private fun getActiveNetworkInfo(): NetworkInfo? {
+        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        return connectivityManager.activeNetworkInfo
     }
 
     private fun saveUsernameAndPassword() {
@@ -31,45 +39,67 @@ class LoginActivity : AppCompatActivity(), LoginCallback {
         editor.apply()
     }
 
-    override fun onUpdate(event: LoginCallback.LoginEvent, updateMessage: String?) {
-        when(event) {
-            LoginCallback.LoginEvent.STATUS_CHANGED -> {
-
-            }
-            LoginCallback.LoginEvent.LOGGED_IN -> {
-                val graphActivity = Intent(this, GraphActivity::class.java)
-                startActivity(graphActivity)
-                finish()
-            }
-            LoginCallback.LoginEvent.LOGIN_FAILURE -> {
-                runOnUiThread {
-                    Snackbar.make(snack_layout, R.string.login_failure, Snackbar.LENGTH_LONG).show()
-                }
-            }
-            LoginCallback.LoginEvent.NO_CREDENTIALS -> {
-
-            }
+    private fun notifyLoginFailure(message: String) {
+        runOnUiThread {
+            Snackbar.make(snack_layout, getString(R.string.login_failure, message), Snackbar.LENGTH_LONG).show()
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
-        cookieJar = PersistentCookieJar(SetCookieCache(), SharedPrefsCookiePersistor(this))
-        client = OkHttpClient.Builder()
-                .cookieJar(cookieJar)
-                .build()
-        login = Login(this, client)
 
         login_button.setOnClickListener { _ ->
-            if (email_address.editText?.text.toString().isBlank() || password.editText?.text.toString().isBlank()) {
+            val networkInfo = getActiveNetworkInfo()
+            if (networkInfo == null || !networkInfo.isConnected) {
+                Snackbar.make(snack_layout, R.string.no_connection, Snackbar.LENGTH_INDEFINITE).show()
+                return@setOnClickListener
+            }
+
+            val email = email_address.editText?.text.toString()
+            val password = password.editText?.text.toString()
+            if (email.isBlank() || password.isBlank()) {
                 Snackbar.make(snack_layout, R.string.incomplete_credentials, Snackbar.LENGTH_LONG).show()
                 return@setOnClickListener
             }
-            login.setUsername(email_address.editText?.text.toString())
-            login.setPassword(password.editText?.text.toString())
-            saveUsernameAndPassword()
-            login.login()
+            val apiImpl = ApiImpl(email, password)
+            apiImpl.client.getAvailableSites()
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(object: SingleObserver<Response<Collection<SiteResponse>>> {
+                        override fun onSuccess(response: Response<Collection<SiteResponse>>) {
+                            when(response.code()) {
+                                200 -> {
+                                    saveUsernameAndPassword()
+                                    val graphActivity = Intent(applicationContext, GraphActivity::class.java)
+                                    startActivity(graphActivity)
+                                    finish()
+                                }
+
+                                401 -> {
+                                    notifyLoginFailure(response.message())
+                                    return
+                                }
+
+                                else -> {
+                                    notifyLoginFailure(response.message())
+                                    return
+                                }
+                            }
+                        }
+
+                        override fun onSubscribe(d: Disposable) {
+                            //
+                        }
+
+                        override fun onError(e: Throwable) {
+                            e.printStackTrace()
+                            val message = e.message
+                            if (message != null) {
+                                notifyLoginFailure(message)
+                            }
+                        }
+                    })
         }
     }
 }
