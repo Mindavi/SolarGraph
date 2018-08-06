@@ -101,7 +101,7 @@ class GraphActivity : AppCompatActivity() {
             return null
         }
         return apiImpl?.client?.getAvailableSites()?.flatMap({
-            return@flatMap apiImpl?.client?.getProductionData(it.body()!!.toTypedArray()[0].publicKey!!)
+            return@flatMap apiImpl?.client?.getProductionData(it.body()!!.toTypedArray()[0].public_key!!)
         })
     }
 
@@ -141,15 +141,15 @@ class GraphActivity : AppCompatActivity() {
     }
 
     private fun onDataRetrieved(responseData: ProductionResponse) {
-        val kpis = responseData.stats?.kpis
-        val outputToday = kpis?.outputToday
-        val outputMonth = kpis?.outputMonth
-        val outputTotal = kpis?.outputToDate
+        val kpis = responseData.stats.kpis
+        val outputToday = kpis.output_today
+        val outputMonth = kpis.output_month
+        val outputTotal = kpis.output_to_date
         today_power.text = getString(R.string.today_power, outputToday)
         monthly_power.text = getString(R.string.month_power, outputMonth)
         total_power.text = getString(R.string.total_power, outputTotal)
 
-        val realTimePowerMap = responseData.stats?.graphs?.realTimePower
+        val realTimePowerMap = responseData.stats.graphs.realtime_power
         val dateFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
         var dataPoints = arrayOf<Entry>()
         if (realTimePowerMap != null) {
