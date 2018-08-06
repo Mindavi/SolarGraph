@@ -71,8 +71,7 @@ class GraphActivity : AppCompatActivity() {
         if (networkInfo?.isConnected == true) {
             loadUsernameAndPassword()
             retrieveData()
-        }
-        else {
+        } else {
             network_info.setText(R.string.no_connection)
         }
     }
@@ -101,7 +100,7 @@ class GraphActivity : AppCompatActivity() {
             return null
         }
         return apiImpl?.client?.getAvailableSites()?.flatMap({
-            return@flatMap apiImpl?.client?.getProductionData(it.body()!!.toTypedArray()[0].public_key!!)
+            return@flatMap apiImpl?.client?.getProductionData(it.body()!!.toTypedArray()[0].public_key)
         })
     }
 
@@ -112,9 +111,9 @@ class GraphActivity : AppCompatActivity() {
         getProductionData()
                 ?.subscribeOn(Schedulers.io())
                 ?.observeOn(AndroidSchedulers.mainThread())
-                ?.subscribe(object: SingleObserver<Response<ProductionResponse>> {
+                ?.subscribe(object : SingleObserver<Response<ProductionResponse>> {
                     override fun onSuccess(response: Response<ProductionResponse>) {
-                        when(response.code()) {
+                        when (response.code()) {
                             ResponseCode.OK -> {
                                 val body = response.body()!!
                                 onDataRetrieved(body)
@@ -152,17 +151,15 @@ class GraphActivity : AppCompatActivity() {
         val realTimePowerMap = responseData.stats.graphs.realtime_power
         val dateFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
         var dataPoints = arrayOf<Entry>()
-        if (realTimePowerMap != null) {
-            for (key in realTimePowerMap.keys) {
-                val power = realTimePowerMap[key]!!
-                val date = dateFormatter.parse(key)
-                // we lose some precision by converting to float unfortunately
-                // this is visible as rounding errors in the 15 minutes between data points (e.g. 14:14 instead of 14:15)
-                dataPoints += Entry(date.time.toFloat(), power.toFloat())
-            }
+        for (key in realTimePowerMap.keys) {
+            val power = realTimePowerMap[key]!!
+            val date = dateFormatter.parse(key)
+            // we lose some precision by converting to float unfortunately
+            // this is visible as rounding errors in the 15 minutes between data points (e.g. 14:14 instead of 14:15)
+            dataPoints += Entry(date.time.toFloat(), power.toFloat())
         }
 
-        val sortedDataPoints = dataPoints.sortedWith(compareBy({it.x}))
+        val sortedDataPoints = dataPoints.sortedWith(compareBy({ it.x }))
 
         val series = LineDataSet(sortedDataPoints, "Power")
         series.color = Color.GREEN
@@ -171,8 +168,8 @@ class GraphActivity : AppCompatActivity() {
         data.setDrawValues(false)
         graph.data = data
 
-        val firstPower = sortedDataPoints.firstOrNull{ it.y > 0}
-        val lastPower = sortedDataPoints.lastOrNull{ it.y > 0}
+        val firstPower = sortedDataPoints.firstOrNull { it.y > 0 }
+        val lastPower = sortedDataPoints.lastOrNull { it.y > 0 }
         if (firstPower != null) {
             graph.xAxis.axisMinimum = firstPower.x
         }
@@ -197,7 +194,7 @@ class GraphActivity : AppCompatActivity() {
         // would be cool if this formatter could round to 15 mins, as the data is like that
         // already and we lose some precision by using floats as data type (MPAndroidChart requires this)
         val timeFormatter = SimpleDateFormat("HH:mm", Locale.US)
-        graph.setOnChartValueSelectedListener(object: OnChartValueSelectedListener{
+        graph.setOnChartValueSelectedListener(object : OnChartValueSelectedListener {
             override fun onNothingSelected() {
                 // pass
             }
